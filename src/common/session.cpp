@@ -49,15 +49,14 @@ HdcSessionBase::HdcSessionBase(bool serverOrDaemonIn, size_t uvThreadSize)
     ctxUSB = nullptr;
     wantRestart = false;
     threadSessionMain = uv_thread_self();
-
-#ifdef HDC_HOST
-    if (serverOrDaemon) {
-        if (libusb_init((libusb_context **)&ctxUSB) != 0) {
-            ctxUSB = nullptr;
-            WRITE_LOG(LOG_FATAL, "libusb_init failed ctxUSB is nullptr");
-        }
-    }
-#endif
+// #ifdef HDC_HOST
+//     if (serverOrDaemon) {
+//         if (libusb_init((libusb_context **)&ctxUSB) != 0) {
+//             ctxUSB = nullptr;
+//             WRITE_LOG(LOG_FATAL, "libusb_init failed ctxUSB is nullptr");
+//         }
+//     }
+// #endif
 }
 
 HdcSessionBase::~HdcSessionBase()
@@ -67,11 +66,11 @@ HdcSessionBase::~HdcSessionBase()
     // clear base
     uv_rwlock_destroy(&mainAsync);
     uv_rwlock_destroy(&lockMapSession);
-#ifdef HDC_HOST
-    if (serverOrDaemon and ctxUSB != nullptr) {
-        libusb_exit((libusb_context *)ctxUSB);
-    }
-#endif
+// #ifdef HDC_HOST
+//     if (serverOrDaemon and ctxUSB != nullptr) {
+//         libusb_exit((libusb_context *)ctxUSB);
+//     }
+// #endif
     WRITE_LOG(LOG_WARN, "~HdcSessionBase free sessionRef:%u instance:%s", uint32_t(sessionRef),
               serverOrDaemon ? "server" : "daemon");
 }
@@ -197,87 +196,87 @@ void HdcSessionBase::ReMainLoopForInstanceClear()
     uv_run(&loopMain, UV_RUN_DEFAULT);
 };
 
-#ifdef HDC_SUPPORT_UART
-void HdcSessionBase::EnumUARTDeviceRegister(UartKickoutZombie kickOut)
-{
-    uv_rwlock_rdlock(&lockMapSession);
-    map<uint32_t, HSession>::iterator i;
-    for (i = mapSession.begin(); i != mapSession.end(); ++i) {
-        HSession hs = i->second;
-        if ((hs->connType != CONN_SERIAL) or (hs->hUART == nullptr)) {
-            continue;
-        }
-        kickOut(hs);
-        break;
-    }
-    uv_rwlock_rdunlock(&lockMapSession);
-}
-#endif
+// #ifdef HDC_SUPPORT_UART
+// void HdcSessionBase::EnumUARTDeviceRegister(UartKickoutZombie kickOut)
+// {
+//     uv_rwlock_rdlock(&lockMapSession);
+//     map<uint32_t, HSession>::iterator i;
+//     for (i = mapSession.begin(); i != mapSession.end(); ++i) {
+//         HSession hs = i->second;
+//         if ((hs->connType != CONN_SERIAL) or (hs->hUART == nullptr)) {
+//             continue;
+//         }
+//         kickOut(hs);
+//         break;
+//     }
+//     uv_rwlock_rdunlock(&lockMapSession);
+// }
+// #endif
 
-void HdcSessionBase::EnumUSBDeviceRegister(void (*pCallBack)(HSession hSession))
-{
-    if (!pCallBack) {
-        return;
-    }
-    uv_rwlock_rdlock(&lockMapSession);
-    map<uint32_t, HSession>::iterator i;
-    for (i = mapSession.begin(); i != mapSession.end(); ++i) {
-        HSession hs = i->second;
-        if (hs->connType != CONN_USB) {
-            continue;
-        }
-        if (hs->hUSB == nullptr) {
-            continue;
-        }
-        if (pCallBack) {
-            pCallBack(hs);
-        }
-        break;
-    }
-    uv_rwlock_rdunlock(&lockMapSession);
-}
+// void HdcSessionBase::EnumUSBDeviceRegister(void (*pCallBack)(HSession hSession))
+// {
+//     // if (!pCallBack) {
+//     //     return;
+//     // }
+//     // uv_rwlock_rdlock(&lockMapSession);
+//     // map<uint32_t, HSession>::iterator i;
+//     // for (i = mapSession.begin(); i != mapSession.end(); ++i) {
+//     //     HSession hs = i->second;
+//     //     if (hs->connType != CONN_USB) {
+//     //         continue;
+//     //     }
+//     //     if (hs->hUSB == nullptr) {
+//     //         continue;
+//     //     }
+//     //     if (pCallBack) {
+//     //         pCallBack(hs);
+//     //     }
+//     //     break;
+//     // }
+//     // uv_rwlock_rdunlock(&lockMapSession);
+// }
 
 // The PC side gives the device information, determines if the USB device is registered
 // PDEV and Busid Devid two choices
-HSession HdcSessionBase::QueryUSBDeviceRegister(void *pDev, uint8_t busIDIn, uint8_t devIDIn)
-{
-#ifdef HDC_HOST
-    libusb_device *dev = (libusb_device *)pDev;
-    HSession hResult = nullptr;
-    if (!mapSession.size()) {
-        return nullptr;
-    }
-    uint8_t busId = 0;
-    uint8_t devId = 0;
-    if (pDev) {
-        busId = libusb_get_bus_number(dev);
-        devId = libusb_get_device_address(dev);
-    } else {
-        busId = busIDIn;
-        devId = devIDIn;
-    }
-    uv_rwlock_rdlock(&lockMapSession);
-    map<uint32_t, HSession>::iterator i;
-    for (i = mapSession.begin(); i != mapSession.end(); ++i) {
-        HSession hs = i->second;
-        if (hs->connType == CONN_USB) {
-            continue;
-        }
-        if (hs->hUSB == nullptr) {
-            continue;
-        }
-        if (hs->hUSB->devId != devId || hs->hUSB->busId != busId) {
-            continue;
-        }
-        hResult = hs;
-        break;
-    }
-    uv_rwlock_rdunlock(&lockMapSession);
-    return hResult;
-#else
-    return nullptr;
-#endif
-}
+// HSession HdcSessionBase::QueryUSBDeviceRegister(void *pDev, uint8_t busIDIn, uint8_t devIDIn)
+// {
+// // #ifdef HDC_HOST
+// //     libusb_device *dev = (libusb_device *)pDev;
+// //     HSession hResult = nullptr;
+// //     if (!mapSession.size()) {
+// //         return nullptr;
+// //     }
+// //     uint8_t busId = 0;
+// //     uint8_t devId = 0;
+// //     if (pDev) {
+// //         busId = libusb_get_bus_number(dev);
+// //         devId = libusb_get_device_address(dev);
+// //     } else {
+// //         busId = busIDIn;
+// //         devId = devIDIn;
+// //     }
+// //     uv_rwlock_rdlock(&lockMapSession);
+// //     map<uint32_t, HSession>::iterator i;
+// //     for (i = mapSession.begin(); i != mapSession.end(); ++i) {
+// //         HSession hs = i->second;
+// //         if (hs->connType == CONN_USB) {
+// //             continue;
+// //         }
+// //         if (hs->hUSB == nullptr) {
+// //             continue;
+// //         }
+// //         if (hs->hUSB->devId != devId || hs->hUSB->busId != busId) {
+// //             continue;
+// //         }
+// //         hResult = hs;
+// //         break;
+// //     }
+// //     uv_rwlock_rdunlock(&lockMapSession);
+// //     return hResult;
+// // #else
+//     return nullptr;
+// // #endif
+// }
 
 void HdcSessionBase::AsyncMainLoopTask(uv_idle_t *handle)
 {
@@ -356,39 +355,44 @@ void HdcSessionBase::WorkerPendding()
 int HdcSessionBase::MallocSessionByConnectType(HSession hSession)
 {
     int ret = 0;
-    switch (hSession->connType) {
-        case CONN_TCP: {
-            uv_tcp_init(&loopMain, &hSession->hWorkTCP);
-            ++hSession->uvHandleRef;
-            hSession->hWorkTCP.data = hSession;
-            break;
-        }
-        case CONN_USB: {
-            // Some members need to be placed at the primary thread
-            HUSB hUSB = new HdcUSB();
-            if (!hUSB) {
-                ret = -1;
-                break;
-            }
-            hSession->hUSB = hUSB;
-            hSession->hUSB->wMaxPacketSizeSend = MAX_PACKET_SIZE_HISPEED;
-            break;
-        }
-#ifdef HDC_SUPPORT_UART
-        case CONN_SERIAL: {
-            HUART hUART = new HdcUART();
-            if (!hUART) {
-                ret = -1;
-                break;
-            }
-            hSession->hUART = hUART;
-            break;
-        }
-#endif // HDC_SUPPORT_UART
-        default:
-            ret = -1;
-            break;
-    }
+//     switch (hSession->connType) {
+//         case CONN_TCP: {
+    uv_tcp_init(&loopMain, &hSession->hWorkTCP);
+    ++hSession->uvHandleRef;
+    hSession->hWorkTCP.data = hSession;
+//             break;
+//         }
+//         // case CONN_USB: {
+//         //     // Some members need to be placed at the primary thread
+//         //     HUSB hUSB = new HdcUSB();
+//         //     if (!hUSB) {
+//         //         ret = -1;
+//         //         break;
+//         //     }
+//         //     hSession->hUSB = hUSB;
+//         //     hSession->hUSB->wMaxPacketSizeSend = MAX_PACKET_SIZE_HISPEED;
+//         //     break;
+//         // }
+// // #ifdef HDC_SUPPORT_UART
+// //         case CONN_SERIAL: {
+// //             HUART hUART = new HdcUART();
+// //             if (!hUART) {
+// //                 ret = -1;
+// //                 break;
+// //             }
+// //             hSession->hUART = hUART;
+// //             break;
+// //         }
+// // #endif // HDC_SUPPORT_UART
+//         default:
+//             if(hSession->connType == CONN_USB) {
+//                 WRITE_LOG(LOG_WARN, "CONN_USB is disabled.");
+//                 ret = -1;
+//             }
+//         // default:
+//         //     ret = -1;
+//         //     break;
+//     }
     return ret;
 }
 
@@ -486,55 +490,54 @@ HSession HdcSessionBase::MallocSession(bool serverOrDaemon, const ConnType connT
 void HdcSessionBase::FreeSessionByConnectType(HSession hSession)
 {
     WRITE_LOG(LOG_DEBUG, "FreeSessionByConnectType %s", hSession->ToDebugString().c_str());
-
-    if (hSession->connType == CONN_USB) {
-        // ibusb All context is applied for sub-threaded, so it needs to be destroyed in the subline
-        if (!hSession->hUSB) {
-            return;
-        }
-        HUSB hUSB = hSession->hUSB;
-        if (!hUSB) {
-            return;
-        }
-#ifdef HDC_HOST
-        if (hUSB->devHandle) {
-            libusb_release_interface(hUSB->devHandle, hUSB->interfaceNumber);
-            libusb_close(hUSB->devHandle);
-            hUSB->devHandle = nullptr;
-        }
-#else
-        Base::CloseFd(hUSB->bulkIn);
-        Base::CloseFd(hUSB->bulkOut);
-#endif
-        delete hSession->hUSB;
-        hSession->hUSB = nullptr;
-    }
-#ifdef HDC_SUPPORT_UART
-    if (CONN_SERIAL == hSession->connType) {
-        if (!hSession->hUART) {
-            return;
-        }
-        HUART hUART = hSession->hUART;
-        if (!hUART) {
-            return;
-        }
-        HdcUARTBase *uartBase = (HdcUARTBase *)hSession->classModule;
-        // tell uart session will be free
-        uartBase->StopSession(hSession);
-#ifdef HDC_HOST
-#ifdef HOST_MINGW
-        if (hUART->devUartHandle != INVALID_HANDLE_VALUE) {
-            CloseHandle(hUART->devUartHandle);
-            hUART->devUartHandle = INVALID_HANDLE_VALUE;
-        }
-#elif defined(HOST_LINUX)
-        Base::CloseFd(hUART->devUartHandle);
-#endif // _WIN32
-#endif
-        delete hSession->hUART;
-        hSession->hUART = nullptr;
-    }
-#endif
+//     if (hSession->connType == CONN_USB) {
+//         // ibusb All context is applied for sub-threaded, so it needs to be destroyed in the subline
+//         if (!hSession->hUSB) {
+//             return;
+//         }
+//         HUSB hUSB = hSession->hUSB;
+//         if (!hUSB) {
+//             return;
+//         }
+// #ifdef HDC_HOST
+//         if (hUSB->devHandle) {
+//             libusb_release_interface(hUSB->devHandle, hUSB->interfaceNumber);
+//             libusb_close(hUSB->devHandle);
+//             hUSB->devHandle = nullptr;
+//         }
+// #else
+//         Base::CloseFd(hUSB->bulkIn);
+//         Base::CloseFd(hUSB->bulkOut);
+// #endif
+//         delete hSession->hUSB;
+//         hSession->hUSB = nullptr;
+//     }
+// #ifdef HDC_SUPPORT_UART
+//     if (CONN_SERIAL == hSession->connType) {
+//         if (!hSession->hUART) {
+//             return;
+//         }
+//         HUART hUART = hSession->hUART;
+//         if (!hUART) {
+//             return;
+//         }
+//         HdcUARTBase *uartBase = (HdcUARTBase *)hSession->classModule;
+//         // tell uart session will be free
+//         uartBase->StopSession(hSession);
+// #ifdef HDC_HOST
+// #ifdef HOST_MINGW
+//         if (hUART->devUartHandle != INVALID_HANDLE_VALUE) {
+//             CloseHandle(hUART->devUartHandle);
+//             hUART->devUartHandle = INVALID_HANDLE_VALUE;
+//         }
+// #elif defined(HOST_LINUX)
+//         Base::CloseFd(hUART->devUartHandle);
+// #endif // _WIN32
+// #endif
+//         delete hSession->hUART;
+//         hSession->hUART = nullptr;
+//     }
+// #endif
 }
 
 // work when libuv-handle at struct of HdcSession has all callback finished
@@ -599,14 +602,14 @@ void HdcSessionBase::FreeSessionOpeate(uv_timer_t *handle)
         return;
     }
     WRITE_LOG(LOG_INFO, "FreeSessionOpeate sid:%u ref:%u", hSession->sessionId, uint32_t(hSession->ref));
-#ifdef HDC_HOST
-    if (hSession->hUSB != nullptr
-        && (!hSession->hUSB->hostBulkIn.isShutdown || !hSession->hUSB->hostBulkOut.isShutdown)) {
-        HdcUSBBase *pUSB = ((HdcUSBBase *)hSession->classModule);
-        pUSB->CancelUsbIo(hSession);
-        return;
-    }
-#endif
+// #ifdef HDC_HOST
+//     if (hSession->hUSB != nullptr
+//         && (!hSession->hUSB->hostBulkIn.isShutdown || !hSession->hUSB->hostBulkOut.isShutdown)) {
+//         HdcUSBBase *pUSB = ((HdcUSBBase *)hSession->classModule);
+//         pUSB->CancelUsbIo(hSession);
+//         return;
+//     }
+// #endif
     // wait workthread to free
     if (hSession->pollHandle[STREAM_WORK]->loop) {
         auto ctrl = BuildCtrlString(SP_STOP_SESSION, 0, nullptr, 0);
@@ -813,37 +816,37 @@ int HdcSessionBase::SendByProtocol(HSession hSession, uint8_t *bufPtr, const int
         return ERR_SESSION_NOFOUND;
     }
     int ret = 0;
-    switch (hSession->connType) {
-        case CONN_TCP: {
-            HdcTCPBase *pTCP = ((HdcTCPBase *)hSession->classModule);
-            if (echo && !hSession->serverOrDaemon) {
-                ret = pTCP->WriteUvTcpFd(&hSession->hChildWorkTCP, bufPtr, bufLen);
-            } else {
-                if (hSession->hWorkThread == uv_thread_self()) {
-                    ret = pTCP->WriteUvTcpFd(&hSession->hWorkTCP, bufPtr, bufLen);
-                } else {
-                    ret = pTCP->WriteUvTcpFd(&hSession->hChildWorkTCP, bufPtr, bufLen);
-                }
-            }
-            break;
+    // switch (hSession->connType) {
+    //     case CONN_TCP: {
+    HdcTCPBase *pTCP = ((HdcTCPBase *)hSession->classModule);
+    if (echo && !hSession->serverOrDaemon) {
+        ret = pTCP->WriteUvTcpFd(&hSession->hChildWorkTCP, bufPtr, bufLen);
+    } else {
+        if (hSession->hWorkThread == uv_thread_self()) {
+            ret = pTCP->WriteUvTcpFd(&hSession->hWorkTCP, bufPtr, bufLen);
+        } else {
+            ret = pTCP->WriteUvTcpFd(&hSession->hChildWorkTCP, bufPtr, bufLen);
         }
-        case CONN_USB: {
-            HdcUSBBase *pUSB = ((HdcUSBBase *)hSession->classModule);
-            ret = pUSB->SendUSBBlock(hSession, bufPtr, bufLen);
-            delete[] bufPtr;
-            break;
-        }
-#ifdef HDC_SUPPORT_UART
-        case CONN_SERIAL: {
-            HdcUARTBase *pUART = ((HdcUARTBase *)hSession->classModule);
-            ret = pUART->SendUARTData(hSession, bufPtr, bufLen);
-            delete[] bufPtr;
-            break;
-        }
-#endif
-        default:
-            break;
     }
+    //         break;
+    //     }
+        // case CONN_USB: {
+        //     HdcUSBBase *pUSB = ((HdcUSBBase *)hSession->classModule);
+        //     ret = pUSB->SendUSBBlock(hSession, bufPtr, bufLen);
+        //     delete[] bufPtr;
+        //     break;
+        // }
+// #ifdef HDC_SUPPORT_UART
+//         case CONN_SERIAL: {
+//             HdcUARTBase *pUART = ((HdcUARTBase *)hSession->classModule);
+//             ret = pUART->SendUARTData(hSession, bufPtr, bufLen);
+//             delete[] bufPtr;
+//             break;
+//         }
+// #endif
+//         default:
+//             break;
+//     }
     return ret;
 }
 
@@ -1097,44 +1100,45 @@ bool HdcSessionBase::WorkThreadStartSession(HSession hSession)
 {
     bool regOK = false;
     int childRet = 0;
-    if (hSession->connType == CONN_TCP) {
-        HdcTCPBase *pTCPBase = (HdcTCPBase *)hSession->classModule;
-        hSession->hChildWorkTCP.data = hSession;
-        if (uv_tcp_init(&hSession->childLoop, &hSession->hChildWorkTCP) < 0) {
-            WRITE_LOG(LOG_WARN, "HdcSessionBase SessionCtrl failed 1");
-            return false;
-        }
-        if ((childRet = uv_tcp_open(&hSession->hChildWorkTCP, hSession->fdChildWorkTCP)) < 0) {
-            constexpr int bufSize = 1024;
-            char buf[bufSize] = { 0 };
-            uv_strerror_r(childRet, buf, bufSize);
-            WRITE_LOG(LOG_WARN, "SessionCtrl failed 2,fd:%d,str:%s", hSession->fdChildWorkTCP, buf);
-            return false;
-        }
-        Base::SetTcpOptions((uv_tcp_t *)&hSession->hChildWorkTCP);
-        uv_read_start((uv_stream_t *)&hSession->hChildWorkTCP, AllocCallback, pTCPBase->ReadStream);
-        regOK = true;
-#ifdef HDC_SUPPORT_UART
-    } else if (hSession->connType == CONN_SERIAL) { // UART
-        HdcUARTBase *pUARTBase = (HdcUARTBase *)hSession->classModule;
-        WRITE_LOG(LOG_DEBUG, "UART ReadyForWorkThread");
-        regOK = pUARTBase->ReadyForWorkThread(hSession);
-#endif
-    } else {  // USB
-        HdcUSBBase *pUSBBase = (HdcUSBBase *)hSession->classModule;
-        WRITE_LOG(LOG_DEBUG, "USB ReadyForWorkThread");
-        regOK = pUSBBase->ReadyForWorkThread(hSession);
+    // if (hSession->connType == CONN_TCP) {
+    HdcTCPBase *pTCPBase = (HdcTCPBase *)hSession->classModule;
+    hSession->hChildWorkTCP.data = hSession;
+    if (uv_tcp_init(&hSession->childLoop, &hSession->hChildWorkTCP) < 0) {
+        WRITE_LOG(LOG_WARN, "HdcSessionBase SessionCtrl failed 1");
+        return false;
     }
+    if ((childRet = uv_tcp_open(&hSession->hChildWorkTCP, hSession->fdChildWorkTCP)) < 0) {
+        constexpr int bufSize = 1024;
+        char buf[bufSize] = { 0 };
+        uv_strerror_r(childRet, buf, bufSize);
+        WRITE_LOG(LOG_WARN, "SessionCtrl failed 2,fd:%d,str:%s", hSession->fdChildWorkTCP, buf);
+        return false;
+    }
+    Base::SetTcpOptions((uv_tcp_t *)&hSession->hChildWorkTCP);
+    uv_read_start((uv_stream_t *)&hSession->hChildWorkTCP, AllocCallback, pTCPBase->ReadStream);
+    regOK = true;
+    // }
+// #ifdef HDC_SUPPORT_UART
+//     } else if (hSession->connType == CONN_SERIAL) { // UART
+//         HdcUARTBase *pUARTBase = (HdcUARTBase *)hSession->classModule;
+//         WRITE_LOG(LOG_DEBUG, "UART ReadyForWorkThread");
+//         regOK = pUARTBase->ReadyForWorkThread(hSession);
+// #endif
+//     } else {  // USB
+//         HdcUSBBase *pUSBBase = (HdcUSBBase *)hSession->classModule;
+//         WRITE_LOG(LOG_DEBUG, "USB ReadyForWorkThread");
+//         regOK = pUSBBase->ReadyForWorkThread(hSession);
+//     }
 
     if (regOK && hSession->serverOrDaemon) {
         // session handshake step1
         SessionHandShake handshake = {};
         WorkThreadInitSession(hSession, handshake);
         string hs = SerialStruct::SerializeToString(handshake);
-#ifdef HDC_SUPPORT_UART
-        WRITE_LOG(LOG_DEBUG, "WorkThreadStartSession session %u auth %u send handshake hs: %s",
-                  hSession->sessionId, handshake.authType, hs.c_str());
-#endif
+// #ifdef HDC_SUPPORT_UART
+//         WRITE_LOG(LOG_DEBUG, "WorkThreadStartSession session %u auth %u send handshake hs: %s",
+//                   hSession->sessionId, handshake.authType, hs.c_str());
+// #endif
         Send(hSession->sessionId, 0, CMD_KERNEL_HANDSHAKE,
              reinterpret_cast<uint8_t *>(const_cast<char *>(hs.c_str())), hs.size());
     }
@@ -1336,10 +1340,10 @@ bool HdcSessionBase::NeedNewTaskInfo(const uint16_t command, bool &masterTask)
     masterTask = false;
     switch (command) {
         case CMD_FILE_INIT:
-        case CMD_FLASHD_FLASH_INIT:
-        case CMD_FLASHD_UPDATE_INIT:
-        case CMD_FLASHD_ERASE:
-        case CMD_FLASHD_FORMAT:
+        // case CMD_FLASHD_FLASH_INIT:
+        // case CMD_FLASHD_UPDATE_INIT:
+        // case CMD_FLASHD_ERASE:
+        // case CMD_FLASHD_FORMAT:
         case CMD_FORWARD_INIT:
         case CMD_APP_INIT:
         case CMD_APP_UNINSTALL:

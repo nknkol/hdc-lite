@@ -37,11 +37,11 @@ public:
     void NotifyInstanceSessionFree(HSession hSession, bool freeOrClear) override;
 
     HdcHostTCP *clsTCPClt;
-    HdcHostUSB *clsUSBClt;
+    // HdcHostUSB *clsUSBClt;
 #ifdef HDC_SUPPORT_UART
     void CreatConnectUart(HSession hSession);
     static void UartPreConnect(uv_timer_t *handle);
-    HdcHostUART *clsUARTClt = nullptr;
+    // HdcHostUART *clsUARTClt = nullptr;
 #endif
     void *clsServerForClient;
 

@@ -103,15 +103,15 @@ Finish:
     return ret;
 }
 
-bool HdcHostApp::BeginSideload(CtxFile *context, const char *localPath)
-{
-    bool ret = false;
-    context->transferConfig.functionName = CMDSTR_APP_SIDELOAD;
-    context->taskQueue.push_back(localPath);
-    RunQueue(context);
-    ret = true;
-    return ret;
-}
+// bool HdcHostApp::BeginSideload(CtxFile *context, const char *localPath)
+// {
+//     bool ret = false;
+//     context->transferConfig.functionName = CMDSTR_APP_SIDELOAD;
+//     context->taskQueue.push_back(localPath);
+//     RunQueue(context);
+//     ret = true;
+//     return ret;
+// }
 
 void HdcHostApp::RunQueue(CtxFile *context)
 {
@@ -208,10 +208,10 @@ bool HdcHostApp::CommandDispatch(const uint16_t command, uint8_t *payload, const
             ctxNow.taskQueue.push_back(reinterpret_cast<char *>(payload));  // just compatible
             break;
         }
-        case CMD_APP_SIDELOAD: {
-            BeginSideload(&ctxNow, (const char *)payload);
-            break;
-        }
+        // case CMD_APP_SIDELOAD: {
+        //     BeginSideload(&ctxNow, (const char *)payload);
+        //     break;
+        // }
         default:
             break;
     }

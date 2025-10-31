@@ -17,8 +17,7 @@ echo "Step 2: Compiling in container..."
 docker run --rm -v $(pwd):/workspace hdc-dev:latest bash -c "
     cd /workspace && \
     make -f Makefile.simple clean && \
-    make -f Makefile.simple all && \
-    make -f Makefile.simple test
+    make -f Makefile.simple all
 "
 
 echo ""

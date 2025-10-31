@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 #include "server.h"
-#include "host_updater.h"
+// #include "host_updater.h"
 
 
 namespace Hdc {
@@ -21,10 +21,10 @@ HdcServer::HdcServer(bool serverOrDaemonIn)
     : HdcSessionBase(serverOrDaemonIn)
 {
     clsTCPClt = nullptr;
-    clsUSBClt = nullptr;
-#ifdef HDC_SUPPORT_UART
-    clsUARTClt = nullptr;
-#endif
+    // clsUSBClt = nullptr;
+// #ifdef HDC_SUPPORT_UART
+//     clsUARTClt = nullptr;
+// #endif
     clsServerForClient = nullptr;
     uv_rwlock_init(&daemonAdmin);
     uv_rwlock_init(&forwardAdmin);
@@ -44,14 +44,14 @@ void HdcServer::ClearInstanceResource()
     if (clsTCPClt) {
         delete clsTCPClt;
     }
-    if (clsUSBClt) {
-        delete clsUSBClt;
-    }
-#ifdef HDC_SUPPORT_UART
-    if (clsUARTClt) {
-        delete clsUARTClt;
-    }
-#endif
+    // if (clsUSBClt) {
+    //     delete clsUSBClt;
+    // }
+// #ifdef HDC_SUPPORT_UART
+//     if (clsUARTClt) {
+//         delete clsUARTClt;
+//     }
+// #endif
     if (clsServerForClient) {
         delete (static_cast<HdcServerForClient *>(clsServerForClient));
     }
@@ -63,14 +63,14 @@ void HdcServer::TryStopInstance()
     if (clsTCPClt) {
         clsTCPClt->Stop();
     }
-    if (clsUSBClt) {
-        clsUSBClt->Stop();
-    }
-#ifdef HDC_SUPPORT_UART
-    if (clsUARTClt) {
-        clsUARTClt->Stop();
-    }
-#endif
+    // if (clsUSBClt) {
+    //     clsUSBClt->Stop();
+    // }
+// #ifdef HDC_SUPPORT_UART
+//     if (clsUARTClt) {
+//         clsUARTClt->Stop();
+//     }
+// #endif
     if (clsServerForClient) {
         ((HdcServerForClient *)clsServerForClient)->Stop();
     }
@@ -91,29 +91,29 @@ bool HdcServer::Initial(const char *listenString)
         WRITE_LOG(LOG_FATAL, "clsServerForClient Initial failed");
         return false;
     }
-    clsUSBClt->InitLogging(ctxUSB);
+    // clsUSBClt->InitLogging(ctxUSB);
     clsTCPClt = new HdcHostTCP(true, this);
-    clsUSBClt = new HdcHostUSB(true, this, ctxUSB);
-    if (clsUSBClt->Initial() != RET_SUCCESS) {
-        WRITE_LOG(LOG_FATAL, "clsUSBClt Initial failed");
-        return false;
-    }
-    if (!clsServerForClient || !clsTCPClt || !clsUSBClt) {
+    // clsUSBClt = new HdcHostUSB(true, this, ctxUSB);
+    // if (clsUSBClt->Initial() != RET_SUCCESS) {
+    //     WRITE_LOG(LOG_FATAL, "clsUSBClt Initial failed");
+    //     return false;
+    // }
+    if (!clsServerForClient || !clsTCPClt) {
         WRITE_LOG(LOG_FATAL, "Class init failed");
         return false;
     }
 
-#ifdef HDC_SUPPORT_UART
-    clsUARTClt = new HdcHostUART(*this);
-    if (!clsUARTClt) {
-        WRITE_LOG(LOG_FATAL, "Class init failed");
-        return false;
-    }
-    if (clsUARTClt->Initial() != RET_SUCCESS) {
-        WRITE_LOG(LOG_FATAL, "clsUARTClt Class init failed.");
-        return false;
-    }
-#endif
+// #ifdef HDC_SUPPORT_UART
+//     clsUARTClt = new HdcHostUART(*this);
+//     if (!clsUARTClt) {
+//         WRITE_LOG(LOG_FATAL, "Class init failed");
+//         return false;
+//     }
+//     if (clsUARTClt->Initial() != RET_SUCCESS) {
+//         WRITE_LOG(LOG_FATAL, "clsUARTClt Class init failed.");
+//         return false;
+//     }
+// #endif
     return true;
 }
 
@@ -405,20 +405,20 @@ void HdcServer::NotifyInstanceSessionFree(HSession hSession, bool freeOrClear)
         HDaemonInfo hdiNew = &diNew;
         AdminDaemonMap(OP_UPDATE, hSession->connectKey, hdiNew);
         CleanForwardMap(hSession->sessionId);
-    } else {  // step2
-        string usbMountPoint = hdiOld->usbMountPoint;
-        // The waiting time must be longer than DEVICE_CHECK_INTERVAL. Wait the method WatchUsbNodeChange
-        // to finish execution. Otherwise, the main thread and the session worker thread will conflict
-        constexpr int waitDaemonReconnect = DEVICE_CHECK_INTERVAL + DEVICE_CHECK_INTERVAL;
-        auto funcDelayUsbNotify = [this, usbMountPoint](const uint8_t flag, string &msg, const void *) -> void {
-            string s = usbMountPoint;
-            clsUSBClt->RemoveIgnoreDevice(s);
-        };
-        if (usbMountPoint.size() > 0) {
-            // wait time for daemon reconnect
-            // If removed from maplist, the USB module will be reconnected, so it needs to wait for a while
-            Base::DelayDoSimple(&loopMain, waitDaemonReconnect, funcDelayUsbNotify);
-        }
+    // } else {  // step2
+    //     string usbMountPoint = hdiOld->usbMountPoint;
+    //     // The waiting time must be longer than DEVICE_CHECK_INTERVAL. Wait the method WatchUsbNodeChange
+    //     // to finish execution. Otherwise, the main thread and the session worker thread will conflict
+    //     constexpr int waitDaemonReconnect = DEVICE_CHECK_INTERVAL + DEVICE_CHECK_INTERVAL;
+    //     auto funcDelayUsbNotify = [this, usbMountPoint](const uint8_t flag, string &msg, const void *) -> void {
+    //         string s = usbMountPoint;
+    //         clsUSBClt->RemoveIgnoreDevice(s);
+    //     };
+    //     if (usbMountPoint.size() > 0) {
+    //         // wait time for daemon reconnect
+    //         // If removed from maplist, the USB module will be reconnected, so it needs to wait for a while
+    //         Base::DelayDoSimple(&loopMain, waitDaemonReconnect, funcDelayUsbNotify);
+    //     }
     }
 }
 
@@ -740,80 +740,80 @@ void HdcServer::CleanForwardMap(uint32_t sessionId)
     uv_rwlock_rdunlock(&forwardAdmin);
 }
 
-void HdcServer::UsbPreConnect(uv_timer_t *handle)
-{
-    HSession hSession = (HSession)handle->data;
-    bool stopLoop = false;
-    HdcServer *hdcServer = (HdcServer *)hSession->classInstance;
-    while (true) {
-        WRITE_LOG(LOG_DEBUG, "HdcServer::UsbPreConnect");
-        HDaemonInfo pDi = nullptr;
-        if (hSession->connectKey == "any") {
-            hdcServer->AdminDaemonMap(OP_GET_ANY, hSession->connectKey, pDi);
-        } else {
-            hdcServer->AdminDaemonMap(OP_QUERY, hSession->connectKey, pDi);
-        }
-        if (!pDi || !pDi->usbMountPoint.size()) {
-            break;
-        }
-        HdcHostUSB *hdcHostUSB = (HdcHostUSB *)hSession->classModule;
-        hdcHostUSB->ConnectDetectDaemon(hSession, pDi);
-        stopLoop = true;
-        break;
-    }
-    if (stopLoop && !uv_is_closing((const uv_handle_t *)handle)) {
-        uv_close((uv_handle_t *)handle, Base::CloseTimerCallback);
-    }
-}
-#ifdef HDC_SUPPORT_UART
-void HdcServer::UartPreConnect(uv_timer_t *handle)
-{
-    WRITE_LOG(LOG_DEBUG, "%s", __FUNCTION__);
-    HSession hSession = (HSession)handle->data;
-    bool stopLoop = false;
-    HdcServer *hdcServer = (HdcServer *)hSession->classInstance;
-    const int uartConnectRetryMax = 100; // max 6s
-    while (true) {
-        if (hSession->hUART->retryCount > uartConnectRetryMax) {
-            WRITE_LOG(LOG_DEBUG, "%s failed because max retry limit %d", __FUNCTION__,
-                      hSession->hUART->retryCount);
-            hdcServer->FreeSession(hSession->sessionId);
-            stopLoop = true;
-            break;
-        }
-        hSession->hUART->retryCount++;
-        HDaemonInfo pDi = nullptr;
+// void HdcServer::UsbPreConnect(uv_timer_t *handle)
+// {
+//     // HSession hSession = (HSession)handle->data;
+//     // bool stopLoop = false;
+//     // HdcServer *hdcServer = (HdcServer *)hSession->classInstance;
+//     // while (true) {
+//     //     WRITE_LOG(LOG_DEBUG, "HdcServer::UsbPreConnect");
+//     //     HDaemonInfo pDi = nullptr;
+//     //     if (hSession->connectKey == "any") {
+//     //         hdcServer->AdminDaemonMap(OP_GET_ANY, hSession->connectKey, pDi);
+//     //     } else {
+//     //         hdcServer->AdminDaemonMap(OP_QUERY, hSession->connectKey, pDi);
+//     //     }
+//     //     if (!pDi || !pDi->usbMountPoint.size()) {
+//     //         break;
+//     //     }
+//     //     HdcHostUSB *hdcHostUSB = (HdcHostUSB *)hSession->classModule;
+//     //     hdcHostUSB->ConnectDetectDaemon(hSession, pDi);
+//     //     stopLoop = true;
+//     //     break;
+//     // }
+//     // if (stopLoop && !uv_is_closing((const uv_handle_t *)handle)) {
+//     //     uv_close((uv_handle_t *)handle, Base::CloseTimerCallback);
+//     // }
+// }
+// #ifdef HDC_SUPPORT_UART
+// void HdcServer::UartPreConnect(uv_timer_t *handle)
+// {
+//     WRITE_LOG(LOG_DEBUG, "%s", __FUNCTION__);
+//     HSession hSession = (HSession)handle->data;
+//     bool stopLoop = false;
+//     HdcServer *hdcServer = (HdcServer *)hSession->classInstance;
+//     const int uartConnectRetryMax = 100; // max 6s
+//     while (true) {
+//         if (hSession->hUART->retryCount > uartConnectRetryMax) {
+//             WRITE_LOG(LOG_DEBUG, "%s failed because max retry limit %d", __FUNCTION__,
+//                       hSession->hUART->retryCount);
+//             hdcServer->FreeSession(hSession->sessionId);
+//             stopLoop = true;
+//             break;
+//         }
+//         hSession->hUART->retryCount++;
+//         HDaemonInfo pDi = nullptr;
 
-        WRITE_LOG(LOG_DEBUG, "%s query %s", __FUNCTION__, hSession->ToDebugString().c_str());
-        hdcServer->AdminDaemonMap(OP_QUERY, hSession->connectKey, pDi);
-        if (!pDi) {
-            WRITE_LOG(LOG_DEBUG, "%s not found", __FUNCTION__);
-            break;
-        }
-        HdcHostUART *hdcHostUART = (HdcHostUART *)hSession->classModule;
-        hdcHostUART->ConnectDaemonByUart(hSession, pDi);
-        WRITE_LOG(LOG_DEBUG, "%s ConnectDaemonByUart done", __FUNCTION__);
+//         WRITE_LOG(LOG_DEBUG, "%s query %s", __FUNCTION__, hSession->ToDebugString().c_str());
+//         hdcServer->AdminDaemonMap(OP_QUERY, hSession->connectKey, pDi);
+//         if (!pDi) {
+//             WRITE_LOG(LOG_DEBUG, "%s not found", __FUNCTION__);
+//             break;
+//         }
+//         HdcHostUART *hdcHostUART = (HdcHostUART *)hSession->classModule;
+//         hdcHostUART->ConnectDaemonByUart(hSession, pDi);
+//         WRITE_LOG(LOG_DEBUG, "%s ConnectDaemonByUart done", __FUNCTION__);
 
-        stopLoop = true;
-        break;
-    }
-    if (stopLoop) {
-        uv_close((uv_handle_t *)handle, Base::CloseTimerCallback);
-    }
-}
+//         stopLoop = true;
+//         break;
+//     }
+//     if (stopLoop) {
+//         uv_close((uv_handle_t *)handle, Base::CloseTimerCallback);
+//     }
+// }
 
-void HdcServer::CreatConnectUart(HSession hSession)
-{
-    uv_timer_t *waitTimeDoCmd = new(std::nothrow) uv_timer_t;
-    if (waitTimeDoCmd == nullptr) {
-        WRITE_LOG(LOG_FATAL, "CreatConnectUart new waitTimeDoCmd failed");
-        return;
-    }
-    uv_timer_init(&loopMain, waitTimeDoCmd);
-    waitTimeDoCmd->data = hSession;
-    uv_timer_start(waitTimeDoCmd, UartPreConnect, UV_TIMEOUT, UV_REPEAT);
-}
-#endif
+// void HdcServer::CreatConnectUart(HSession hSession)
+// {
+//     uv_timer_t *waitTimeDoCmd = new(std::nothrow) uv_timer_t;
+//     if (waitTimeDoCmd == nullptr) {
+//         WRITE_LOG(LOG_FATAL, "CreatConnectUart new waitTimeDoCmd failed");
+//         return;
+//     }
+//     uv_timer_init(&loopMain, waitTimeDoCmd);
+//     waitTimeDoCmd->data = hSession;
+//     uv_timer_start(waitTimeDoCmd, UartPreConnect, UV_TIMEOUT, UV_REPEAT);
+// }
+// #endif
 // -1,has old,-2 error
 int HdcServer::CreateConnect(const string &connectKey, bool isCheck)
 {
@@ -821,15 +821,16 @@ int HdcServer::CreateConnect(const string &connectKey, bool isCheck)
     if (connectKey.find(":") != std::string::npos) { // TCP
         connType = CONN_TCP;
     }
-#ifdef HDC_SUPPORT_UART
-    else if (connectKey.find("COM") == 0 ||
-             connectKey.find("/dev/ttyUSB") == 0 ||
-             connectKey.find("/dev/cu.") == 0) { // UART
-        connType = CONN_SERIAL;
-    }
-#endif
+// #ifdef HDC_SUPPORT_UART
+//     else if (connectKey.find("COM") == 0 ||
+//              connectKey.find("/dev/ttyUSB") == 0 ||
+//              connectKey.find("/dev/cu.") == 0) { // UART
+//         connType = CONN_SERIAL;
+//     }
+// #endif
     else { // USB
-        connType = CONN_USB;
+        WRITE_LOG(LOG_WARN, "USB connection is not supported in this streamlined build.");
+        return ERR_NO_SUPPORT;
     }
     HDaemonInfo hdi = nullptr;
     if (connectKey == "any") {
@@ -852,31 +853,38 @@ int HdcServer::CreateConnect(const string &connectKey, bool isCheck)
     HSession hSession = nullptr;
     if (connType == CONN_TCP) {
         hSession = clsTCPClt->ConnectDaemon(connectKey, isCheck);
-    } else if (connType == CONN_SERIAL) {
-#ifdef HDC_SUPPORT_UART
-        clsUARTClt->SetCheckFlag(isCheck);
-        hSession = clsUARTClt->ConnectDaemon(connectKey);
-#endif
-    } else {
-        hSession = MallocSession(true, CONN_USB, clsUSBClt);
-        if (!hSession) {
-            WRITE_LOG(LOG_FATAL, "CreateConnect malloc usb session failed %s", Hdc::MaskString(connectKey).c_str());
-            return ERR_BUF_ALLOC;
-        }
-        hSession->connectKey = connectKey;
-        uv_timer_t *waitTimeDoCmd = new(std::nothrow) uv_timer_t;
-        if (waitTimeDoCmd == nullptr) {
-            WRITE_LOG(LOG_FATAL, "CreateConnect new waitTimeDoCmd failed");
-            FreeSession(hSession->sessionId);
-            return ERR_GENERIC;
-        }
-        uv_timer_init(&loopMain, waitTimeDoCmd);
-        waitTimeDoCmd->data = hSession;
-        uv_timer_start(waitTimeDoCmd, UsbPreConnect, UV_TIMEOUT, UV_REPEAT);
-    }
-    if (!hSession) {
+    }// else if (connType == CONN_SERIAL) {
+// #ifdef HDC_SUPPORT_UART
+//         clsUARTClt->SetCheckFlag(isCheck);
+//         hSession = clsUARTClt->ConnectDaemon(connectKey);
+// #endif
+//     }
+    // } else {
+    //     hSession = MallocSession(true, CONN_USB, clsUSBClt);
+    //     if (!hSession) {
+    //         WRITE_LOG(LOG_FATAL, "CreateConnect malloc usb session failed %s", Hdc::MaskString(connectKey).c_str());
+    //         return ERR_BUF_ALLOC;
+    //     }
+    //     hSession->connectKey = connectKey;
+    //     uv_timer_t *waitTimeDoCmd = new(std::nothrow) uv_timer_t;
+    //     if (waitTimeDoCmd == nullptr) {
+    //         WRITE_LOG(LOG_FATAL, "CreateConnect new waitTimeDoCmd failed");
+    //         FreeSession(hSession->sessionId);
+    //         return ERR_GENERIC;
+    //     }
+    //     uv_timer_init(&loopMain, waitTimeDoCmd);
+    //     waitTimeDoCmd->data = hSession;
+    //     uv_timer_start(waitTimeDoCmd, UsbPreConnect, UV_TIMEOUT, UV_REPEAT);
+    // }
+    // if (!hSession) {
+    //     WRITE_LOG(LOG_FATAL, "CreateConnect hSession nullptr");
+    //     return ERR_BUF_ALLOC;
+    // }
+    if (!hSession && connType != CONN_USB) {
         WRITE_LOG(LOG_FATAL, "CreateConnect hSession nullptr");
         return ERR_BUF_ALLOC;
+    } else if (connType == CONN_USB) {
+        return ERR_NO_SUPPORT;
     }
     HDaemonInfo hdiQuery = nullptr;
     AdminDaemonMap(OP_QUERY, connectKey, hdiQuery);
@@ -1004,17 +1012,17 @@ bool HdcServer::RedirectToTask(HTaskInfo hTaskInfo, HSession hSession, const uin
         case CMD_APP_UNINSTALL:
             ret = TaskCommandDispatch<HdcHostApp>(hTaskInfo, TASK_APP, command, payload, payloadSize);
             break;
-        case CMD_FLASHD_UPDATE_INIT:
-        case CMD_FLASHD_FLASH_INIT:
-        case CMD_FLASHD_CHECK:
-        case CMD_FLASHD_BEGIN:
-        case CMD_FLASHD_DATA:
-        case CMD_FLASHD_FINISH:
-        case CMD_FLASHD_ERASE:
-        case CMD_FLASHD_FORMAT:
-        case CMD_FLASHD_PROGRESS:
-            ret = TaskCommandDispatch<HostUpdater>(hTaskInfo, TASK_FLASHD, command, payload, payloadSize);
-            break;
+        // case CMD_FLASHD_UPDATE_INIT:
+        // case CMD_FLASHD_FLASH_INIT:
+        // case CMD_FLASHD_CHECK:
+        // case CMD_FLASHD_BEGIN:
+        // case CMD_FLASHD_DATA:
+        // case CMD_FLASHD_FINISH:
+        // case CMD_FLASHD_ERASE:
+        // case CMD_FLASHD_FORMAT:
+        // case CMD_FLASHD_PROGRESS:
+        //     ret = TaskCommandDispatch<HostUpdater>(hTaskInfo, TASK_FLASHD, command, payload, payloadSize);
+        //     break;
         default:
             // ignore unknown command
             break;
@@ -1041,9 +1049,9 @@ bool HdcServer::RemoveInstanceTask(const uint8_t op, HTaskInfo hTask)
         case TASK_APP:
             ret = DoTaskRemove<HdcHostApp>(hTask, op);
             break;
-        case TASK_FLASHD:
-            ret = DoTaskRemove<HostUpdater>(hTask, op);
-            break;
+        // case TASK_FLASHD:
+        //     ret = DoTaskRemove<HostUpdater>(hTask, op);
+        //     break;
         default:
             ret = false;
             break;

@@ -47,21 +47,21 @@ using std::vector;
 
 // clang-format off
 #include <uv.h>  // libuv 1.35
-#ifdef HDC_HOST
+// #ifdef HDC_HOST
 
-#ifdef HARMONY_PROJECT
-#include <libusb.h>
-#else  // NOT HARMONY_PROJECT
-#include <libusb-1.0/libusb.h>
-#endif // END HARMONY_PROJECT
+// #ifdef HARMONY_PROJECT
+// #include <libusb.h>
+// #else  // NOT HARMONY_PROJECT
+// #include <libusb-1.0/libusb.h>
+// #endif // END HARMONY_PROJECT
 
-#else // NOT HDC_HOST
-#endif // HDC_HOST
+// #else // NOT HDC_HOST
+// #endif // HDC_HOST
 
-#ifndef _WIN32
-#include <sys/socket.h>
-#include <sys/un.h>
-#endif
+// #ifndef _WIN32
+// #include <sys/socket.h>
+// #include <sys/un.h>
+// #endif
 
 #include <securec.h>
 #include <limits.h>
@@ -76,7 +76,7 @@ using std::vector;
 #include "auth.h"
 
 #include "tcp.h"
-#include "usb.h"
+// #include "usb.h"
 #ifdef HDC_SUPPORT_UART
 #include "uart.h"
 #endif

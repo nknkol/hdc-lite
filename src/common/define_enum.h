@@ -36,31 +36,31 @@ enum MessageLevel {
 enum ConnType { CONN_USB = 0, CONN_TCP, CONN_SERIAL, CONN_BT, CONN_UNKNOWN };
 const string conTypeDetail[] = { "USB", "TCP", "UART", "BT", "UNKNOWN" };
 
-#ifdef HDC_SUPPORT_UART
-enum UartTimeConst {
-    UV_TIMEOUT = 10,
-    UV_REPEAT = 100,
-    TIMEOUTS_R_INTERALTIMEOUT = 1000,
-    TIMEOUTS_R_TOALTIMEOUTMULTIPLIER = 500,
-    TIMEOUTS_R_TIMEOUTCONSTANT = 5000
-};
-enum UartSetSerialNBits {
-    UART_BIT1 = 7,
-    UART_BIT2 = 8
-};
-enum UartSetSerialNSpeed {
-    UART_SPEED2400 = 2400,
-    UART_SPEED4800 = 4800,
-    UART_SPEED9600 = 9600,
-    UART_SPEED115200 = 115200,
-    UART_SPEED921600 = 921600,
-    UART_SPEED1500000 = 1500000
-};
-enum UartSetSerialNStop {
-    UART_STOP1 = 1,
-    UART_STOP2 = 2
-};
-#endif
+// #ifdef HDC_SUPPORT_UART
+// enum UartTimeConst {
+//     UV_TIMEOUT = 10,
+//     UV_REPEAT = 100,
+//     TIMEOUTS_R_INTERALTIMEOUT = 1000,
+//     TIMEOUTS_R_TOALTIMEOUTMULTIPLIER = 500,
+//     TIMEOUTS_R_TIMEOUTCONSTANT = 5000
+// };
+// enum UartSetSerialNBits {
+//     UART_BIT1 = 7,
+//     UART_BIT2 = 8
+// };
+// enum UartSetSerialNSpeed {
+//     UART_SPEED2400 = 2400,
+//     UART_SPEED4800 = 4800,
+//     UART_SPEED9600 = 9600,
+//     UART_SPEED115200 = 115200,
+//     UART_SPEED921600 = 921600,
+//     UART_SPEED1500000 = 1500000
+// };
+// enum UartSetSerialNStop {
+//     UART_STOP1 = 1,
+//     UART_STOP2 = 2
+// };
+// #endif
 enum ConnStatus { STATUS_UNKNOW = 0, STATUS_READY, STATUS_CONNECTED, STATUS_OFFLINE, STATUS_UNAUTH };
 const string conStatusDetail[] = { "Unknown", "Ready", "Connected", "Offline", "Unauthorized" };
 
@@ -203,24 +203,24 @@ enum HdcCommand {
     // deprecated, remove later
     CMD_UNITY_JPID = CMD_JDWP_LIST,
 
-    // Flashd commands
-    CMD_FLASHD_UPDATE_INIT = 4000,
-    CMD_FLASHD_FLASH_INIT,
-    CMD_FLASHD_CHECK,
-    CMD_FLASHD_BEGIN,
-    CMD_FLASHD_DATA,
-    CMD_FLASHD_FINISH,
-    CMD_FLASHD_ERASE,
-    CMD_FLASHD_FORMAT,
-    CMD_FLASHD_PROGRESS,
+    // // Flashd commands
+    // CMD_FLASHD_UPDATE_INIT = 4000,
+    // CMD_FLASHD_FLASH_INIT,
+    // CMD_FLASHD_CHECK,
+    // CMD_FLASHD_BEGIN,
+    // CMD_FLASHD_DATA,
+    // CMD_FLASHD_FINISH,
+    // CMD_FLASHD_ERASE,
+    // CMD_FLASHD_FORMAT,
+    // CMD_FLASHD_PROGRESS,
 };
 
-enum UsbProtocolOption {
-    USB_OPTION_HEADER = 1,
-    USB_OPTION_RESET = 2,
-    USB_OPTION_RESERVE4 = 4,
-    USB_OPTION_RESERVE8 = 8,
-    USB_OPTION_RESERVE16 = 16,
-};
+// enum UsbProtocolOption {
+//     USB_OPTION_HEADER = 1,
+//     USB_OPTION_RESET = 2,
+//     USB_OPTION_RESERVE4 = 4,
+//     USB_OPTION_RESERVE8 = 8,
+//     USB_OPTION_RESERVE16 = 16,
+// };
 }
 #endif

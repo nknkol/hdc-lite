@@ -4,7 +4,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 #include "translate.h"
-#include "host_updater.h"
+// #include "host_updater.h"
 
 namespace Hdc {
 namespace TranslateCommand {
@@ -35,11 +35,9 @@ namespace TranslateCommand {
               "service commands(on daemon):\n"
               " target mount                          - Set /system /vendor partition read-write\n"
               " wait                                  - Wait for the device to become available\n"
-              " target boot [-bootloader|-recovery]   - Reboot the device or boot into bootloader\\recovery.\n"
               " target boot [MODE]                    - Reboot the into MODE.\n"
               " smode [-r]                            - Restart daemon with root permissions, '-r' to cancel root\n"
               "                                         permissions\n"
-              " tmode usb                             - Reboot the device, listening on USB\n"
               " tmode port [port]                     - Reboot the device, listening on TCP port\n"
               "\n"
               "---------------------------------task commands:-------------------------------------\n"
@@ -109,27 +107,16 @@ namespace TranslateCommand {
             " list targets [-v]                     - List all devices status, -v for detail\n"
             " tconn key                             - Connect device via key, TCP use ip:port\n"
             "                                         example:192.168.0.100:10178/192.168.0.100\n"
-            "                                         USB connect automatic, TCP need to connect manually\n"
-#ifdef HDC_SUPPORT_UART
-            "\n"
-            "                                         UART connect need connect manually.\n"
-            "                                         Baud Rate can be specified with commas.\n"
-            "                                         key format: <Port Name>[,Baud Rate]\n"
-            "                                         example: tconn COM5,921600\n"
-            "                                         Default Baud Rate is 921600.\n"
-            "\n"
-#endif
+            "                                         TCP need to connect manually\n"
             " start [-r]                            - Start server. If with '-r', will be restart server\n"
             " kill [-r]                             - Kill server. If with '-r', will be restart server\n"
             " -s [ip:]port                          - Set hdc server listen config\n"
             "\n"
             "service commands(on daemon):\n"
             " target mount                          - Set /system /vendor partition read-write\n"
-            " target boot [-bootloader|-recovery]   - Reboot the device or boot into bootloader\\recovery.\n"
             " target boot [MODE]                    - Reboot the into MODE.\n"
             " smode [-r]                            - Restart daemon with root permissions, '-r' to cancel root\n"
             "                                         permissions\n"
-            " tmode usb                             - Reboot the device, listening on USB\n"
             " tmode port [port]                     - Reboot the device, listening on TCP port\n"
             "\n"
             "---------------------------------task commands:-------------------------------------\n"
@@ -172,17 +159,10 @@ namespace TranslateCommand {
             " bugreport [FILE]                      - Return all information from the device, stored in file if FILE "
             "is specified\n"
             " jpid                                  - List PIDs of processes hosting a JDWP transport\n"
-            " sideload [PATH]                       - Sideload the given full OTA package\n"
             "\n"
             "security commands:\n"
             " keygen FILE                           - Generate public/private key; key stored in FILE and FILE.pub\n"
             "\n"
-            "---------------------------------flash commands:------------------------------------\n"
-            "flash commands:\n"
-            " update packagename                    - Update system by package\n"
-            " flash [-f] partition imagename        - Flash partition by image\n"
-            " erase [-f] partition                  - Erase partition\n"
-            " format [-f] partition                 - Format partition\n"
             "---------------------------------external commands:------------------------------------\n"
             "extconn key                             - Connect external device via key, TCP use ip:port(remian)\n"
             "-S [ip:]port                            - Set hdc external server listen config\n"
@@ -224,6 +204,10 @@ namespace TranslateCommand {
                 stringError = "IP:Port incorrect";
                 outCmd->bJumpDo = true;
             }
+        } else {
+            // All wired modes (USB/UART) are removed, only TCP (ip:port) is allowed
+            stringError = "Only TCP (ip:port) connections are supported.";
+            outCmd->bJumpDo = true;
         }
         return stringError;
     }
@@ -260,40 +244,44 @@ namespace TranslateCommand {
         return stringError;
     }
 
-    string RunMode(const char *input, FormatCommand *outCmd)
+    string RunMode(const char *inputRaw, FormatCommand *outCmd)
     {
         string stringError;
         outCmd->cmdFlag = CMD_UNITY_RUNMODE;
-        outCmd->parameters = input + CMDSTR_TARGET_MODE.size() + 1;  // with  ' '
-        int portLength = 4;
-        int portSpaceLength = 5;
-        if (!strncmp(outCmd->parameters.c_str(), "port", portLength) &&
-            !strcmp(outCmd->parameters.c_str(), CMDSTR_TMODE_USB.c_str())) {
-            stringError = "Error tmode command";
-            outCmd->bJumpDo = true;
-        } else if (!strncmp(outCmd->parameters.c_str(), "port ", portSpaceLength)) {
-            const char *tmp = input + strlen("tmode port ");
-            // command is tmode port close
-            if (strcmp(tmp, "close") == 0) {
-                return stringError;
+        outCmd->parameters = inputRaw + CMDSTR_TARGET_MODE.size() + 1;  // with  ' '
+        
+        if (!strncmp(outCmd->parameters.c_str(), CMDSTR_TMODE_USB.c_str(), CMDSTR_TMODE_USB.size())) {
+             stringError = "tmode usb is disabled in wireless-only mode.";
+             outCmd->bJumpDo = true;
+        } else if (!strncmp(outCmd->parameters.c_str(), "port", 4)) { // 4:"port"
+            // 保留 tmode port 逻辑
+            if (!strncmp(outCmd->parameters.c_str(), "port ", 5)) { // 5:"port "
+                 const char *tmp = inputRaw + strlen("tmode port ");
+                 if (strcmp(tmp, "close") == 0) {
+                     return stringError;
+                 }
+                 int port = atoi(tmp);
+                 if (port > MAX_IP_PORT || port <= 0) {
+                     stringError = "Incorrect port range";
+                     outCmd->bJumpDo = true;
+                 }
             }
-            int port = atoi(tmp);
-            if (port > MAX_IP_PORT || port <= 0) {
-                stringError = "Incorrect port range";
-                outCmd->bJumpDo = true;
-            }
+        } else {
+             stringError = "Error tmode command";
+             outCmd->bJumpDo = true;
         }
         return stringError;
     }
 
-    void TargetReboot(const char *input, FormatCommand *outCmd)
+    void TargetReboot(const char *inputRaw, FormatCommand *outCmd)
     {
         outCmd->cmdFlag = CMD_UNITY_REBOOT;
-        if (strcmp(input, CMDSTR_TARGET_REBOOT.c_str())) {
-            outCmd->parameters = input + CMDSTR_TARGET_REBOOT.size() + 1;  // with  ' '
+        if (strcmp(inputRaw, CMDSTR_TARGET_REBOOT.c_str())) {
+            outCmd->parameters = inputRaw + CMDSTR_TARGET_REBOOT.size() + 1;  // with  ' '
             if (outCmd->parameters == "-bootloader" || outCmd->parameters == "-recovery" ||
                 outCmd->parameters == "-flashd") {
-                outCmd->parameters.erase(outCmd->parameters.begin());
+                // 阻止这些模式
+                outCmd->bJumpDo = true;
             }
         }
     }
@@ -370,9 +358,15 @@ namespace TranslateCommand {
                 outCmd->parameters = "a";
             }
         } else if (!strncmp(input.c_str(), CMDSTR_TARGET_REBOOT.c_str(), CMDSTR_TARGET_REBOOT.size())) {
-            TargetReboot(input.c_str(), outCmd);
+            TargetReboot(inputRaw, outCmd);
+            if (outCmd->bJumpDo) {
+                 stringError = "Booting to bootloader/recovery/flashd is disabled in wireless-only mode.";
+            }
+        } else if (!strncmp(input.c_str(), "sideload", 8)) {
+            stringError = "sideload is disabled in wireless-only mode.";
+            outCmd->bJumpDo = true;
         } else if (!strncmp(input.c_str(), CMDSTR_TARGET_MODE.c_str(), CMDSTR_TARGET_MODE.size())) {
-            stringError = RunMode(input.c_str(), outCmd);
+            stringError = RunMode(inputRaw, outCmd);
         } else if (!strncmp(input.c_str(), CMDSTR_HILOG.c_str(), CMDSTR_HILOG.size())) {
             outCmd->cmdFlag = CMD_UNITY_HILOG;
             if (strstr(input.c_str(), " -h")) {
@@ -383,13 +377,6 @@ namespace TranslateCommand {
             if (strstr(input.c_str(), " -r")) {
                 outCmd->parameters = "r";
             }
-        } else if (!strncmp(input.c_str(), CMDSTR_APP_SIDELOAD.c_str(), CMDSTR_APP_SIDELOAD.size())) {
-            if (strlen(input.c_str()) == CMDSTR_APP_SIDELOAD.size()) {
-                stringError = "Incorrect command, please with local path";
-                outCmd->bJumpDo = true;
-            }
-            outCmd->cmdFlag = CMD_APP_SIDELOAD;
-            outCmd->parameters = input;
         } else if (!strncmp(input.c_str(), CMDSTR_BUGREPORT.c_str(), CMDSTR_BUGREPORT.size())) {
             outCmd->cmdFlag = CMD_UNITY_BUGREPORT_INIT;
             outCmd->parameters = input;
@@ -400,9 +387,11 @@ namespace TranslateCommand {
         // Inner command, protocol uses only
         else if (!strncmp(input.c_str(), CMDSTR_INNER_ENABLE_KEEPALIVE.c_str(), CMDSTR_INNER_ENABLE_KEEPALIVE.size())) {
             outCmd->cmdFlag = CMD_KERNEL_ENABLE_KEEPALIVE;
-        } else if (HostUpdater::CheckMatchUpdate(input, *outCmd)) {
-            outCmd->parameters = input;
-        } else {
+        }
+        // } else if (HostUpdater::CheckMatchUpdate(input, *outCmd)) { // -- 移除刷机相关命令
+        //     outCmd->parameters = input;
+        // } 
+        else {
             stringError = "Unknown command...";
             outCmd->bJumpDo = true;
         }

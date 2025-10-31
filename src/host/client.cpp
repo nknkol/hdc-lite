@@ -16,7 +16,7 @@
 #ifndef TEST_HASH
 #include "hdc_hash_gen.h"
 #endif
-#include "host_updater.h"
+// #include "host_updater.h"
 #include "server.h"
 #include "file.h"
 
@@ -429,30 +429,30 @@ void HdcClient::CommandWorker(uv_timer_t *handle)
     }
     uv_timer_stop(handle);
     WRITE_LOG(LOG_DEBUG, "Connect server successful");
-    bool closeInput = false;
-    if (!HostUpdater::ConfirmCommand(thisClass->command, closeInput)) {
-        uv_timer_stop(handle);
-        uv_stop(thisClass->loopMain);
-        WRITE_LOG(LOG_DEBUG, "Cmd \'%s\' has been canceld", thisClass->command.c_str());
-        return;
-    }
-    while (closeInput) {
-#ifndef _WIN32
-        if (tcgetattr(STDIN_FILENO, &thisClass->terminalState)) {
-            break;
-        }
-        termios tio;
-        if (tcgetattr(STDIN_FILENO, &tio)) {
-            break;
-        }
-        cfmakeraw(&tio);
-        tio.c_cc[VTIME] = 0;
-        tio.c_cc[VMIN] = 1;
-        tcsetattr(STDIN_FILENO, TCSAFLUSH, &tio);
-        g_terminalStateChange = true;
-#endif
-        break;
-    }
+//     bool closeInput = false;
+//     if (!HostUpdater::ConfirmCommand(thisClass->command, closeInput)) {
+//         uv_timer_stop(handle);
+//         uv_stop(thisClass->loopMain);
+//         WRITE_LOG(LOG_DEBUG, "Cmd \'%s\' has been canceld", thisClass->command.c_str());
+//         return;
+//     }
+//     while (closeInput) {
+// #ifndef _WIN32
+//         if (tcgetattr(STDIN_FILENO, &thisClass->terminalState)) {
+//             break;
+//         }
+//         termios tio;
+//         if (tcgetattr(STDIN_FILENO, &tio)) {
+//             break;
+//         }
+//         cfmakeraw(&tio);
+//         tio.c_cc[VTIME] = 0;
+//         tio.c_cc[VMIN] = 1;
+//         tcsetattr(STDIN_FILENO, TCSAFLUSH, &tio);
+//         g_terminalStateChange = true;
+// #endif
+//         break;
+//     }
     thisClass->Send(thisClass->channel->channelId,
                     const_cast<uint8_t *>(reinterpret_cast<const uint8_t *>(thisClass->command.c_str())),
                     thisClass->command.size() + 1);

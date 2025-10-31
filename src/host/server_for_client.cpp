@@ -572,15 +572,15 @@ bool HdcServerForClient::TaskCommand(HChannel hChannel, void *formatCommandInput
     } else if (formatCommand->cmdFlag == CMD_UNITY_BUGREPORT_INIT) {
         cmdFlag = "bugreport ";
         sizeCmdFlag = 10;  // 10: cmdFlag bugreport size
-    } else if (formatCommand->cmdFlag == CMD_APP_SIDELOAD) {
-        cmdFlag = "sideload ";
-        sizeCmdFlag = 9; // 9: cmdFlag sideload size
-    } else if (formatCommand->cmdFlag == CMD_FLASHD_UPDATE_INIT) {
-        cmdFlag = "update ";
-        sizeCmdFlag = 7; // 7: cmdFlag update size
-    } else if (formatCommand->cmdFlag == CMD_FLASHD_FLASH_INIT) {
-        cmdFlag = "flash ";
-        sizeCmdFlag = 6; // 6: cmdFlag flash size
+    // } else if (formatCommand->cmdFlag == CMD_APP_SIDELOAD) {
+    //     cmdFlag = "sideload ";
+    //     sizeCmdFlag = 9; // 9: cmdFlag sideload size
+    // } else if (formatCommand->cmdFlag == CMD_FLASHD_UPDATE_INIT) {
+    //     cmdFlag = "update ";
+    //     sizeCmdFlag = 7; // 7: cmdFlag update size
+    // } else if (formatCommand->cmdFlag == CMD_FLASHD_FLASH_INIT) {
+    //     cmdFlag = "flash ";
+    //     sizeCmdFlag = 6; // 6: cmdFlag flash size
     }
     int sizeSend = formatCommand->parameters.size();
     if (!strncmp(formatCommand->parameters.c_str(), cmdFlag.c_str(), sizeCmdFlag)) {  // local do
@@ -642,7 +642,13 @@ bool HdcServerForClient::DoCommandRemote(HChannel hChannel, void *formatCommandI
         case CMD_UNITY_EXECUTE:
         case CMD_UNITY_REMOUNT:
         case CMD_UNITY_REBOOT:
-        case CMD_UNITY_RUNMODE:
+        case CMD_UNITY_RUNMODE: {
+            if (formatCommand->parameters == CMDSTR_TMODE_USB) {
+                EchoClient(hChannel, MSG_FAIL, "tmode usb is disabled in this streamlined build.");
+                ret = true;
+                break;
+            }
+        }
         case CMD_UNITY_HILOG:
         case CMD_UNITY_ROOTRUN:
         case CMD_JDWP_TRACK:
@@ -663,11 +669,12 @@ bool HdcServerForClient::DoCommandRemote(HChannel hChannel, void *formatCommandI
         case CMD_APP_INIT:
         case CMD_APP_UNINSTALL:
         case CMD_UNITY_BUGREPORT_INIT:
-        case CMD_APP_SIDELOAD:
-        case CMD_FLASHD_UPDATE_INIT:
-        case CMD_FLASHD_FLASH_INIT:
-        case CMD_FLASHD_ERASE:
-        case CMD_FLASHD_FORMAT: {
+        // case CMD_APP_SIDELOAD:
+        // case CMD_FLASHD_UPDATE_INIT:
+        // case CMD_FLASHD_FLASH_INIT:
+        // case CMD_FLASHD_ERASE:
+        // case CMD_FLASHD_FORMAT: 
+        {
             TaskCommand(hChannel, formatCommandInput);
             ret = true;
             break;

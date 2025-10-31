@@ -73,14 +73,14 @@ int IsRegisterCommand(string &outCommand, const char *cmd, const char *cmdnext)
     registerCommand.push_back(CMDSTR_STARTUP_MODE);
     registerCommand.push_back(CMDSTR_BUGREPORT);
     registerCommand.push_back(CMDSTR_TARGET_MODE);
-    registerCommand.push_back(CMDSTR_APP_SIDELOAD);
+    // registerCommand.push_back(CMDSTR_APP_SIDELOAD);
     registerCommand.push_back(CMDSTR_TARGET_REBOOT);
     registerCommand.push_back(CMDSTR_LIST_JDWP);
     registerCommand.push_back(CMDSTR_TRACK_JDWP);
-    registerCommand.push_back(CMDSTR_FLASHD_UPDATE);
-    registerCommand.push_back(CMDSTR_FLASHD_FLASH);
-    registerCommand.push_back(CMDSTR_FLASHD_ERASE);
-    registerCommand.push_back(CMDSTR_FLASHD_FORMAT);
+    // registerCommand.push_back(CMDSTR_FLASHD_UPDATE);
+    // registerCommand.push_back(CMDSTR_FLASHD_FLASH);
+    // registerCommand.push_back(CMDSTR_FLASHD_ERASE);
+    // registerCommand.push_back(CMDSTR_FLASHD_FORMAT);
 
     for (string v : registerCommand) {
         if (doubleCommand == v) {
@@ -97,8 +97,7 @@ int IsRegisterCommand(string &outCommand, const char *cmd, const char *cmdnext)
 
 void AppendCwdWhenTransfer(string &outCommand)
 {
-    if (outCommand != CMDSTR_FILE_SEND && outCommand != CMDSTR_FILE_RECV && outCommand != CMDSTR_APP_INSTALL &&
-        outCommand != CMDSTR_APP_SIDELOAD) {
+    if (outCommand != CMDSTR_FILE_SEND && outCommand != CMDSTR_FILE_RECV && outCommand != CMDSTR_APP_INSTALL) {
         return;
     }
     int value = -1;

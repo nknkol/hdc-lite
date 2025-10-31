@@ -150,14 +150,14 @@ const string CMDSTR_TMODE_USB = "usb";
 const string HILOG_NAME = "hilog.exe";
 const string SPLIT = "\\";
 #endif
-#ifdef HDC_SUPPORT_UART
-const string CMDSTR_TMODE_UART = "uart";
-const string UART_HDC_NODE = "/dev/ttyS4";
-const string CONSOLE_ACTIVE_NODE = "/sys/class/tty/console/active";
-constexpr int UART_IO_WAIT_TIME_100 = 100;
-constexpr int UART_IO_WAIT_TIME = 1000;
-constexpr uint16_t MAX_UART_SIZE_IOBUF = 4096; // MAX_SIZE_IOBUF;
-#endif
+// #ifdef HDC_SUPPORT_UART
+// const string CMDSTR_TMODE_UART = "uart";
+// const string UART_HDC_NODE = "/dev/ttyS4";
+// const string CONSOLE_ACTIVE_NODE = "/sys/class/tty/console/active";
+// constexpr int UART_IO_WAIT_TIME_100 = 100;
+// constexpr int UART_IO_WAIT_TIME = 1000;
+// constexpr uint16_t MAX_UART_SIZE_IOBUF = 4096; // MAX_SIZE_IOBUF;
+// #endif
 const string CMDSTR_TMODE_TCP = "tcp";
 #ifdef HDC_EMULATOR
 const string CMDSTR_TMODE_BRIDGE = "bridge";
@@ -169,7 +169,7 @@ const string CMDSTR_FORWARD_FPORT = "fport";
 const string CMDSTR_FORWARD_RPORT = "rport";
 const string CMDSTR_APP_INSTALL = "install";
 const string CMDSTR_APP_UNINSTALL = "uninstall";
-const string CMDSTR_APP_SIDELOAD = "sideload";
+// const string CMDSTR_APP_SIDELOAD = "sideload";
 const string CMDSTR_LIST_JDWP = "jpid";
 const string CMDSTR_TRACK_JDWP = "track-jpid";
 const string CMDSTR_INNER_ENABLE_KEEPALIVE = "alive";

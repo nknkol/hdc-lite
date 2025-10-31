@@ -102,93 +102,93 @@ using HTaskInfo = TaskInformation *;
 #pragma pack(pop)
 
 #ifdef HDC_HOST
-struct HostUSBEndpoint {
-    HostUSBEndpoint(uint32_t epBufSize)
-    {
-        endpoint = 0;
-        sizeEpBuf = epBufSize;  // MAX_USBFFS_BULK
-        transfer = libusb_alloc_transfer(0);
-        isShutdown = true;
-        isComplete = true;
-        bulkInOut = false;
-        buf = new (std::nothrow) uint8_t[sizeEpBuf];
-        (void)memset_s(buf, sizeEpBuf, 0, sizeEpBuf);
-    }
-    ~HostUSBEndpoint()
-    {
-        libusb_free_transfer(transfer);
-        delete[] buf;
-    }
-    uint8_t endpoint;
-    uint8_t *buf;  // MAX_USBFFS_BULK
-    bool isComplete;
-    bool isShutdown;
-    bool bulkInOut;  // true is bulkIn
-    uint32_t sizeEpBuf;
-    std::mutex mutexIo;
-    std::mutex mutexCb;
-    condition_variable cv;
-    libusb_transfer *transfer;
-};
+// struct HostUSBEndpoint {
+//     HostUSBEndpoint(uint32_t epBufSize)
+//     {
+//         endpoint = 0;
+//         sizeEpBuf = epBufSize;  // MAX_USBFFS_BULK
+//         transfer = libusb_alloc_transfer(0);
+//         isShutdown = true;
+//         isComplete = true;
+//         bulkInOut = false;
+//         buf = new (std::nothrow) uint8_t[sizeEpBuf];
+//         (void)memset_s(buf, sizeEpBuf, 0, sizeEpBuf);
+//     }
+//     ~HostUSBEndpoint()
+//     {
+//         libusb_free_transfer(transfer);
+//         delete[] buf;
+//     }
+//     uint8_t endpoint;
+//     uint8_t *buf;  // MAX_USBFFS_BULK
+//     bool isComplete;
+//     bool isShutdown;
+//     bool bulkInOut;  // true is bulkIn
+//     uint32_t sizeEpBuf;
+//     std::mutex mutexIo;
+//     std::mutex mutexCb;
+//     condition_variable cv;
+//     libusb_transfer *transfer;
+// };
 #endif
 
-struct HdcUSB {
-#ifdef HDC_HOST
-    libusb_context *ctxUSB = nullptr;  // child-use, main null
-    libusb_device *device;
-    libusb_device_handle *devHandle;
-    uint16_t retryCount;
-    uint8_t devId;
-    uint8_t busId;
-    uint8_t interfaceNumber;
-    std::string serialNumber;
-    std::string usbMountPoint;
-    HostUSBEndpoint hostBulkIn;
-    HostUSBEndpoint hostBulkOut;
-    HdcUSB() : hostBulkIn(513 * 1024), hostBulkOut(512 * 1024) {} // 513: 512 + 1, 1024: 1KB
-    // 512 * 1024 + 1024 = 513 * 1024, MAX_USBFFS_BULK: 512 * 1024
+// struct HdcUSB {
+// #ifdef HDC_HOST
+//     libusb_context *ctxUSB = nullptr;  // child-use, main null
+//     libusb_device *device;
+//     libusb_device_handle *devHandle;
+//     uint16_t retryCount;
+//     uint8_t devId;
+//     uint8_t busId;
+//     uint8_t interfaceNumber;
+//     std::string serialNumber;
+//     std::string usbMountPoint;
+//     HostUSBEndpoint hostBulkIn;
+//     HostUSBEndpoint hostBulkOut;
+//     HdcUSB() : hostBulkIn(513 * 1024), hostBulkOut(512 * 1024) {} // 513: 512 + 1, 1024: 1KB
+//     // 512 * 1024 + 1024 = 513 * 1024, MAX_USBFFS_BULK: 512 * 1024
 
-#else
-    // usb accessory FunctionFS
-    // USB main thread use, sub-thread disable, sub-thread uses the main thread USB handle
-    int bulkOut;  // EP1 device recv
-    int bulkIn;   // EP2 device send
-#endif
-    uint32_t payloadSize;
-    uint16_t wMaxPacketSizeSend;
-    bool resetIO;  // if true, must break write and read,default false
-    std::mutex lockDeviceHandle;
-    std::mutex lockSendUsbBlock;
-};
-using HUSB = struct HdcUSB *;
+// #else
+//     // usb accessory FunctionFS
+//     // USB main thread use, sub-thread disable, sub-thread uses the main thread USB handle
+//     int bulkOut;  // EP1 device recv
+//     int bulkIn;   // EP2 device send
+// #endif
+//     uint32_t payloadSize;
+//     uint16_t wMaxPacketSizeSend;
+//     bool resetIO;  // if true, must break write and read,default false
+//     std::mutex lockDeviceHandle;
+//     std::mutex lockSendUsbBlock;
+// };
+// using HUSB = struct HdcUSB *;
 
-#ifdef HDC_SUPPORT_UART
-struct HdcUART {
-#ifdef HDC_HOST
-    std::string serialPort;
-    std::thread readThread;
-    uint16_t retryCount = 0;
-#endif // HDC_HOST
+// #ifdef HDC_SUPPORT_UART
+// struct HdcUART {
+// #ifdef HDC_HOST
+//     std::string serialPort;
+//     std::thread readThread;
+//     uint16_t retryCount = 0;
+// #endif // HDC_HOST
 
-#ifdef _WIN32
-    OVERLAPPED ovWrite;
-    OVERLAPPED ovRead;
-    HANDLE devUartHandle = INVALID_HANDLE_VALUE;
-#else
-    // we also make this for daemon side
-    int devUartHandle = -1;
-#endif
-    // if we want to cancel io (read thread exit)
-    bool ioCancel = false;
-    uint32_t dispatchedPackageIndex = 0;
-    bool resetIO = false; // if true, must break write and read,default false
-    uint64_t packageIndex = 0;
-    std::atomic_size_t streamSize = 0; // for debug only
-    HdcUART();
-    ~HdcUART();
-};
-using HUART = struct HdcUART *;
-#endif
+// #ifdef _WIN32
+//     OVERLAPPED ovWrite;
+//     OVERLAPPED ovRead;
+//     HANDLE devUartHandle = INVALID_HANDLE_VALUE;
+// #else
+//     // we also make this for daemon side
+//     int devUartHandle = -1;
+// #endif
+//     // if we want to cancel io (read thread exit)
+//     bool ioCancel = false;
+//     uint32_t dispatchedPackageIndex = 0;
+//     bool resetIO = false; // if true, must break write and read,default false
+//     uint64_t packageIndex = 0;
+//     std::atomic_size_t streamSize = 0; // for debug only
+//     HdcUART();
+//     ~HdcUART();
+// };
+// using HUART = struct HdcUART *;
+// #endif
 struct HdcSessionStat {
     // bytes successed send to hSession->dataFd[STREAM_MAIN]
     std::atomic<uint64_t> dataSendBytes;
@@ -232,9 +232,9 @@ struct HdcSession {
     uv_tcp_t hChildWorkTCP;  // work channel，separate thread for server/daemon
     uv_os_sock_t fdChildWorkTCP;
     // usb handle
-    HUSB hUSB;
+    // HUSB hUSB;
 #ifdef HDC_SUPPORT_UART
-    HUART hUART = nullptr;
+    // HUART hUART = nullptr;
 #endif
     // tcp handle
     uv_tcp_t hWorkTCP;
@@ -278,7 +278,7 @@ struct HdcSession {
         listKey = nullptr;
         authKeyIndex = 0;
         tokenRSA = "";
-        hUSB = nullptr;
+        // hUSB = nullptr;
         (void)memset_s(pollHandle, sizeof(pollHandle), 0, sizeof(pollHandle));
         (void)memset_s(ctrlFd, sizeof(ctrlFd), 0, sizeof(ctrlFd));
         (void)memset_s(dataFd, sizeof(dataFd), 0, sizeof(dataFd));
@@ -287,9 +287,9 @@ struct HdcSession {
         (void)memset_s(&hChildWorkTCP, sizeof(hChildWorkTCP), 0, sizeof(hChildWorkTCP));
         (void)memset_s(&fdChildWorkTCP, sizeof(fdChildWorkTCP), 0, sizeof(fdChildWorkTCP));
         (void)memset_s(&stat, sizeof(stat), 0, sizeof(stat));
-#ifdef HDC_SUPPORT_UART
-        hUART = nullptr;
-#endif
+// #ifdef HDC_SUPPORT_UART
+//         // hUART = nullptr;
+// #endif
         verifyType = AuthVerifyType::RSA_3072_SHA512;
         isNeedDropData = true;
         isSoftReset = false;

@@ -44,8 +44,6 @@ HOST_SRCS = src/host/client.cpp \
             src/host/host_forward.cpp \
             src/host/host_tcp.cpp \
             src/host/host_unity.cpp \
-            src/host/host_updater.cpp \
-            src/host/host_usb.cpp \
             src/host/server.cpp \
             src/host/server_for_client.cpp \
             src/host/translate.cpp \
@@ -68,8 +66,7 @@ COMMON_SRCS = src/common/async_cmd.cpp \
               src/common/session.cpp \
               src/common/task.cpp \
               src/common/tcp.cpp \
-              src/common/transfer.cpp \
-              src/common/usb.cpp
+              src/common/transfer.cpp
 
 # 目标文件
 BUILD_DIR = build
@@ -80,7 +77,7 @@ HOST_OBJS = $(HOST_SRCS:src/%.cpp=$(OBJ_DIR)/%.o)
 ALL_OBJS = $(COMMON_OBJS) $(HOST_OBJS)
 
 # 目标
-.PHONY: all clean dirs hdc info test
+.PHONY: all clean dirs hdc info
 
 all: info dirs hdc
 
@@ -115,22 +112,6 @@ $(OBJ_DIR)/host/%.o: src/host/%.cpp
 	@echo ">>> Compiling $<..."
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) $(DEFINES) $(INCLUDES) -c $< -o $@
-
-# 测试编译结果
-test: hdc
-	@echo "========================================="
-	@echo "Testing build..."
-	@echo "========================================="
-	@file $(BUILD_DIR)/hdc
-	@echo ""
-	@echo "Dependencies:"
-	@ldd $(BUILD_DIR)/hdc | grep -E "libuv|crypto|usb|boundscheck" || true
-	@echo ""
-	@echo "Version check:"
-	@$(BUILD_DIR)/hdc -v || echo "Version command may not work yet"
-	@echo ""
-	@echo "Help:"
-	@$(BUILD_DIR)/hdc -h || echo "Help command may not work yet"
 
 clean:
 	@echo "Cleaning..."

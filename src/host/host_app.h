@@ -28,7 +28,7 @@ private:
     void CheckMaster(CtxFile *context) override;
     bool CheckInstallContinue(AppModType mode, bool lastResult, const char *msg);
     void RunQueue(CtxFile *context);
-    bool BeginSideload(CtxFile *context, const char *localPath);
+    // bool BeginSideload(CtxFile *context, const char *localPath);
     string Dir2Tar(const char *dir);
     size_t printedMsgLen = 0;
     string originLocalDir = "";
