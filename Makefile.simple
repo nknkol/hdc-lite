@@ -1,0 +1,154 @@
+# 简化版Makefile - 基于原版代码结构
+# 修复编译错误
+
+CC = gcc
+CXX = g++
+CXXFLAGS = -std=c++17 -ggdb -Wall -O2 -fPIC
+
+# 定义宏（修复所有缺失的宏定义）
+DEFINES = -DUSE_CONFIG_UV_THREADS \
+          -DSIZE_THREAD_POOL=16 \
+          -DHDC_HOST \
+          -DHOST_LINUX \
+          -DHARMONY_PROJECT \
+          -DTEST_HASH \
+          -DHDC_MSG_HASH=\"TEST\" \
+          -D__FILE_NAME__=__FILE__ \
+          -DUV_TIMEOUT=0 \
+          -DUV_REPEAT=3000
+
+# 头文件路径
+INCLUDES = -Isrc/common \
+           -Isrc/host \
+           -I/usr/include \
+           -I/usr/include/libusb-1.0 \
+           -I/usr/local/include/securec
+
+# 链接库
+LIBS = -luv \
+       -lcrypto \
+       -lssl \
+       -lusb-1.0 \
+       -llz4 \
+       -lboundscheck \
+       -lpthread \
+       -ldl \
+       -lrt
+
+LDFLAGS = -L/usr/local/lib -Wl,-rpath,/usr/local/lib
+
+# Host端源文件（添加缺失的文件）
+HOST_SRCS = src/host/client.cpp \
+            src/host/ext_client.cpp \
+            src/host/host_app.cpp \
+            src/host/host_forward.cpp \
+            src/host/host_tcp.cpp \
+            src/host/host_unity.cpp \
+            src/host/host_updater.cpp \
+            src/host/host_usb.cpp \
+            src/host/server.cpp \
+            src/host/server_for_client.cpp \
+            src/host/translate.cpp \
+            src/host/main.cpp
+
+# 公共源文件（添加compress.cpp）
+COMMON_SRCS = src/common/async_cmd.cpp \
+              src/common/auth.cpp \
+              src/common/base.cpp \
+              src/common/channel.cpp \
+              src/common/circle_buffer.cpp \
+              src/common/compress.cpp \
+              src/common/debug.cpp \
+              src/common/decompress.cpp \
+              src/common/entry.cpp \
+              src/common/file.cpp \
+              src/common/file_descriptor.cpp \
+              src/common/forward.cpp \
+              src/common/header.cpp \
+              src/common/session.cpp \
+              src/common/task.cpp \
+              src/common/tcp.cpp \
+              src/common/transfer.cpp \
+              src/common/usb.cpp
+
+# 目标文件
+BUILD_DIR = build
+OBJ_DIR = $(BUILD_DIR)/obj
+
+COMMON_OBJS = $(COMMON_SRCS:src/%.cpp=$(OBJ_DIR)/%.o)
+HOST_OBJS = $(HOST_SRCS:src/%.cpp=$(OBJ_DIR)/%.o)
+ALL_OBJS = $(COMMON_OBJS) $(HOST_OBJS)
+
+# 目标
+.PHONY: all clean dirs hdc info test
+
+all: info dirs hdc
+
+info:
+	@echo "========================================="
+	@echo "HDC Original Version Build"
+	@echo "========================================="
+	@echo "Compiler: $(CXX)"
+	@echo "Build Dir: $(BUILD_DIR)"
+	@echo "C++ Standard: C++17"
+	@echo "========================================="
+
+dirs:
+	@mkdir -p $(BUILD_DIR)
+	@mkdir -p $(OBJ_DIR)/common
+	@mkdir -p $(OBJ_DIR)/host
+
+# 编译完整的hdc（包含client和server）
+hdc: $(ALL_OBJS)
+	@echo ">>> Linking hdc (full version)..."
+	$(CXX) $(CXXFLAGS) -o $(BUILD_DIR)/hdc $^ $(LDFLAGS) $(LIBS)
+	@echo "✓ Built: $(BUILD_DIR)/hdc"
+	@ls -lh $(BUILD_DIR)/hdc
+
+# 编译规则
+$(OBJ_DIR)/common/%.o: src/common/%.cpp
+	@echo ">>> Compiling $<..."
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) $(DEFINES) $(INCLUDES) -c $< -o $@
+
+$(OBJ_DIR)/host/%.o: src/host/%.cpp
+	@echo ">>> Compiling $<..."
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) $(DEFINES) $(INCLUDES) -c $< -o $@
+
+# 测试编译结果
+test: hdc
+	@echo "========================================="
+	@echo "Testing build..."
+	@echo "========================================="
+	@file $(BUILD_DIR)/hdc
+	@echo ""
+	@echo "Dependencies:"
+	@ldd $(BUILD_DIR)/hdc | grep -E "libuv|crypto|usb|boundscheck" || true
+	@echo ""
+	@echo "Version check:"
+	@$(BUILD_DIR)/hdc -v || echo "Version command may not work yet"
+	@echo ""
+	@echo "Help:"
+	@$(BUILD_DIR)/hdc -h || echo "Help command may not work yet"
+
+clean:
+	@echo "Cleaning..."
+	rm -rf $(BUILD_DIR)
+	@echo "✓ Cleaned"
+
+# 显示源文件列表
+show-sources:
+	@echo "Common sources:"
+	@echo "$(COMMON_SRCS)" | tr ' ' '\n'
+	@echo ""
+	@echo "Host sources:"
+	@echo "$(HOST_SRCS)" | tr ' ' '\n'
+
+# 显示编译选项（调试用）
+show-flags:
+	@echo "DEFINES: $(DEFINES)"
+	@echo ""
+	@echo "INCLUDES: $(INCLUDES)"
+	@echo ""
+	@echo "LIBS: $(LIBS)"
