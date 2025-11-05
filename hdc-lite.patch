@@ -1,7 +1,3 @@
-diff --git a/src/.DS_Store b/src/.DS_Store
-new file mode 100644
-index 0000000..2eb91c9
-Binary files /dev/null and b/src/.DS_Store differ
 diff --git a/hdc/src/CMakeLists.txt b/hdc/src/CMakeLists.txt
 deleted file mode 100644
 index a73695e..0000000
@@ -22,6 +18,19 @@ index a73695e..0000000
 -
 -add_subdirectory(daemon)
 -add_subdirectory(host)
+diff --git a/hdc/src/common/auth.cpp b/src/common/auth.cpp
+index 67aaea7..b6cea7b 100644
+--- a/hdc/src/common/auth.cpp
++++ b/src/common/auth.cpp
+@@ -250,7 +250,7 @@ int GetUserKeyPath(string &path)
+ {
+     struct stat status;
+     const char harmoneyPath[] = ".harmony";
+-    const char hdcKeyFile[] = "hdckey";
++    const char hdcKeyFile[] = "hdclite_hdckey";
+     char buf[BUF_SIZE_DEFAULT];
+     size_t len = BUF_SIZE_DEFAULT;
+     // $home
 diff --git a/hdc/src/common/common.h b/src/common/common.h
 index f6bbb36..ec9ef8a 100644
 --- a/hdc/src/common/common.h

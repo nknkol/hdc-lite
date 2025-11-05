@@ -250,7 +250,7 @@ int GetUserKeyPath(string &path)
 {
     struct stat status;
     const char harmoneyPath[] = ".harmony";
-    const char hdcKeyFile[] = "hdckey";
+    const char hdcKeyFile[] = "hdclite_hdckey";
     char buf[BUF_SIZE_DEFAULT];
     size_t len = BUF_SIZE_DEFAULT;
     // $home
